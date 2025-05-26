@@ -12,6 +12,6 @@ export async function errorResponse(res, statusCode, message) {
     status: statusCode,
     message,
     error: true,
-    data:null,
+    data: null,
   });
 }

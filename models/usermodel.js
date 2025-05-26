@@ -5,7 +5,12 @@ const userSchema = new Schema(
     firstname: String,
     lastname: String,
     email: String,
-    mobile: Number,
+    mobile: String,
+    role: {
+      type: String,
+      enum: ["admin", "user"],
+      default: "user",
+    },
     password: String,
   },
   { timestamps: true, versionKey: false }

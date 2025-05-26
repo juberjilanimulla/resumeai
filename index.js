@@ -5,6 +5,7 @@ import morgan from "morgan";
 import cors from "cors";
 import userRoutes from "./routes/userRoutes.js";
 import bodyParser from "body-parser";
+import { Admin } from "./helpers/helperFunction.js";
 
 const app = express();
 const port = config.PORT;
@@ -26,6 +27,7 @@ app.use("/api/user", userRoutes);
 //server connection
 dbConnect()
   .then(() => {
+    Admin();
     app.listen(port, () => {
       console.log(`server is listening at ${port} `);
     });
