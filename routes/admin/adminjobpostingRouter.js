@@ -9,8 +9,8 @@ const adminjobpostingRouter = Router();
 
 adminjobpostingRouter.post("/create", createjobpostHandler);
 adminjobpostingRouter.post("/getall", getalljobpostHandler);
-adminjobpostingRouter.post("/update", updatejobpostHandler);
-adminjobpostingRouter.post("/delete", deletejobpostHandler);
+adminjobpostingRouter.put("/update", updatejobpostHandler);
+adminjobpostingRouter.delete("/delete", deletejobpostHandler);
 adminjobpostingRouter.get("/single", getsinglejobpostHandler);
 adminjobpostingRouter.post("/approved/:id", approvedjobpostingHandler);
 

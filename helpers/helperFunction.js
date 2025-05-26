@@ -21,10 +21,10 @@ export function generateAccessToken(id, email, role) {
     sessionid,
   };
   const encoded_token = jwt.sign(encoded_tokenPayload, secrectKey, {
-    expiresIn: "1m",
+    expiresIn: "1d",
   });
   const public_token = jwt.sign(public_tokenPayload, secrectKey, {
-    expiresIn: "1m",
+    expiresIn: "1d",
   });
   return { encoded_token, public_token };
 }

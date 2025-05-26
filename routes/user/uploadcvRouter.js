@@ -229,7 +229,7 @@ cvpdfRouter.post("/:id", (req, res) => {
       return errorResponse(res, 400, "No File was uploaded");
     }
 
-    try {
+    try {  
       const resume = req.file.filename;
       const contactId = req.params.id;
       const updatedContactcv = await jobapplicantsmodel.findByIdAndUpdate(
@@ -240,7 +240,7 @@ cvpdfRouter.post("/:id", (req, res) => {
       if (!updatedContactcv) {
         return errorResponse(res, 404, "contact cv not found");
       }
-      console.log("updatedContactcv", updatedContactcv);
+
       successResponse(res, "PDF successfully uploaded cv", updatedContactcv);
     } catch (error) {
       console.log("error", error);
