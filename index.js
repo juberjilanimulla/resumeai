@@ -4,8 +4,14 @@ import dbConnect from "./db.js";
 import morgan from "morgan";
 import cors from "cors";
 import bodyParser from "body-parser";
-import { Admin } from "./helpers/helperFunction.js";
+import {
+  Admin,
+  authMiddleware,
+  isAdminMiddleware,
+} from "./helpers/helperFunction.js";
 import userRouter from "./routes/user/userRouter.js";
+import authRouter from "./routes/auth/authRouter.js";
+import adminRouter from "./routes/admin/adminRouter.js";
 
 const app = express();
 const port = config.PORT;
@@ -50,8 +56,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-//routes 
+//routes
+app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
+app.use("/api/admin", authMiddleware, isAdminMiddleware, adminRouter);
 
 //server connection
 dbConnect()

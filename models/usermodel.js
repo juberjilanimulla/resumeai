@@ -8,7 +8,7 @@ const userSchema = new Schema(
     mobile: String,
     role: {
       type: String,
-      enum: ["admin", "user"],
+      enum: ["Admin", "user"],
       default: "user",
     },
     password: String,

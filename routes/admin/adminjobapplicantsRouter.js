@@ -15,6 +15,7 @@ export default adminjobapplicantsRouter;
 async function getalljobapplicantsHandler(req, res) {
   try {
     const role = res.locals.role; // Ensure only admins can access
+
     if (role !== "Admin") {
       return errorResponse(res, 403, "Unauthorized access - Admins only");
     }

@@ -5,13 +5,11 @@ import {
   generateAccessToken,
   getSessionData,
   validatetoken,
-  sendEmailOTP,
 } from "../../helpers/helperFunction.js";
 import {
   errorResponse,
   successResponse,
 } from "../../helpers/serverResponse.js";
-import { checkRateLimit } from "../../helpers/helperFunction.js";
 import usermodel from "../../models/usermodel.js";
 
 const authRouter = Router();
@@ -73,15 +71,15 @@ async function forgetpasswordHandler(req, res) {
       errorResponse(res, 400, "Email not found");
       return;
     }
-    const isWithinRateLimit = await checkRateLimit(email);
-    if (!isWithinRateLimit) {
-      return errorResponse(
-        res,
-        429,
-        "Too many requests. Please try again after 15 minutes"
-      );
-    }
-    usersotp.tokenotp = await sendEmailOTP(email);
+    // const isWithinRateLimit = await checkRateLimit(email);
+    // if (!isWithinRateLimit) {
+    //   return errorResponse(
+    //     res,
+    //     429,
+    //     "Too many requests. Please try again after 15 minutes"
+    //   );
+    // }
+    // usersotp.tokenotp = await sendEmailOTP(email);
     await usersotp.save();
 
     successResponse(res, "OTP successfully sent");
@@ -192,7 +190,7 @@ async function signupHandler(req, res) {
     const { firstname, lastname, email, mobile, role, password, approved } =
       req.body;
 
-    if (!firstname || !lastname || !email || !mobile || !role || !password) {
+    if (!firstname || !lastname || !email || !mobile || !password) {
       return errorResponse(res, 400, "Some params are missing");
     }
 
@@ -212,32 +210,6 @@ async function signupHandler(req, res) {
     const existingMobile = await usermodel.findOne({ mobile });
     if (existingMobile) {
       return errorResponse(res, 409, "User with this mobile already exists");
-    }
-
-    // 🔹 Check Manager Limit (Max 10)
-    if (role === "manager") {
-      const managerCount = await usermodel.countDocuments({ role: "manager" });
-      if (managerCount >= 10) {
-        return errorResponse(
-          res,
-          400,
-          "Cannot add more managers. Limit reached (10)."
-        );
-      }
-    }
-
-    // 🔹 Check Recruiter Limit (Max 100)
-    if (role === "recruiter") {
-      const recruiterCount = await usermodel.countDocuments({
-        role: "recruiter",
-      });
-      if (recruiterCount >= 100) {
-        return errorResponse(
-          res,
-          400,
-          "Cannot add more recruiters. Limit reached (100)."
-        );
-      }
     }
 
     // 🔹 Hash Password

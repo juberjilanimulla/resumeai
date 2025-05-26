@@ -41,7 +41,7 @@ export function validatetoken(token) {
 export async function isAdminMiddleware(req, res, next) {
   const isAdmin = res.locals.role;
   // console.log("isAdmin", isAdmin);
-  if (!isAdmin || isAdmin !== "admin") {
+  if (!isAdmin || isAdmin !== "Admin") {
     errorResponse(res, 403, "user not authorized");
     return;
   }
@@ -128,7 +128,7 @@ export async function Admin() {
         firstname: "admin",
         lastname: "admin",
         email: email,
-        role: "admin",
+        role: "Admin",
         mobile: "+91**********",
         password: bcryptPassword("1234"),
       });
