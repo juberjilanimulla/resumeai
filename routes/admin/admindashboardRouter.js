@@ -23,7 +23,6 @@ async function getdashboardHandler(req, res) {
       jobposting,
       jobapplicants,
       resumeextract,
-      s,
     });
   } catch (error) {
     console.log("error", error);
