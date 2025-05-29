@@ -135,3 +135,13 @@ test*
 #upload folder
 /uploads
 /logs
+
+/pdfs
+pdfs*
+/tempocr
+eng.traineddata
+pdfs
+
+#.json
+credentials.json
+token.json

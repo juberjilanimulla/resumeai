@@ -1,5 +1,5 @@
 {
-  "name": "boilerplate",
+  "name": "resumeai",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
@@ -18,10 +18,18 @@
     "crypto": "^1.0.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "google-auth-library": "^9.15.1",
+    "googleapis": "^149.0.0",
     "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.9.1",
     "mongoose": "^8.14.2",
     "morgan": "^1.10.0",
     "multer": "^2.0.0",
+    "openai": "^4.103.0",
+    "pdf-parse": "^1.1.1",
+    "pdf-poppler": "^0.2.1",
+    "pdf2json": "^3.1.6",
+    "tesseract.js": "^6.0.1",
     "uuid": "^11.1.0"
   }
 }

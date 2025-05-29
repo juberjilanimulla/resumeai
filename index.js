@@ -36,11 +36,6 @@ app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.json({ limit: "10mb" }));
-app.use(
-  morgan(
-    ":remote-addr :method :url :status :res[content-length] - :response-time ms"
-  )
-);
 
 // Error handling middleware for JSON parsing errors
 app.use((err, req, res, next) => {
