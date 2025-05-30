@@ -47,7 +47,9 @@ async function getalljobapplicantsHandler(req, res) {
       const searchConditions = [
         { name: { $regex: searchRegex } },
         { email: { $regex: searchRegex } },
+        { mobile: { $regex: searchRegex } },
         { "jobs.jobtitle": { $regex: searchRegex } },
+        { "jobs.location": { $regex: searchRegex } },
       ];
       query.$and.push({ $or: searchConditions });
     }
@@ -68,7 +70,6 @@ async function getalljobapplicantsHandler(req, res) {
 
     // Aggregation pipeline
     const applicants = await jobapplicantsmodel.aggregate([
-      { $match: query },
       {
         $lookup: {
           from: "jobpostings",
@@ -78,6 +79,7 @@ async function getalljobapplicantsHandler(req, res) {
         },
       },
       { $unwind: "$jobs" },
+      { $match: query },
       {
         $lookup: {
           from: "users",
