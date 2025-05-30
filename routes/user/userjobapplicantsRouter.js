@@ -3,14 +3,13 @@ import {
   errorResponse,
   successResponse,
 } from "../../helpers/serverResponse.js";
-import cvpdfRouter from "./uploadcvRouter.js";
 import jobapplicantsmodel from "../../models/jobapplicantsmodel.js";
 import jobpostingmodel from "../../models/jobpostingmodel.js";
 
 const userjobapplicantsRouter = Router();
 
 userjobapplicantsRouter.post("/create", createjobapplicantHandler);
-userjobapplicantsRouter.use("/upload", cvpdfRouter);
+
 
 export default userjobapplicantsRouter;
 

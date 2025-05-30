@@ -13,8 +13,6 @@ import {
   successResponse,
   errorResponse,
 } from "../../helpers/serverResponse.js";
-import getnumber from "../../helpers/helperFunction.js";
-import jobapplicantsmodel from "../../models/jobapplicantsmodel.js";
 import resumeextractmodel from "../../models/resumeextractmodel.js";
 
 dotenv.config();
@@ -31,14 +29,9 @@ const tempStorage = multer.diskStorage({
   },
   filename: async (req, file, cb) => {
     try {
-      const pid = req.params.id;
-      const applicant = await jobapplicantsmodel.findById(pid);
-      const fullName = applicant?.name || "Applicant";
-      const cleanName = fullName.replace(/\s+/g, "_").replace(/[^\w\-]/g, "");
-      const pdfnumber = await getnumber(pid);
       const id = Math.floor(Math.random() * 900000) + 1000;
       const ext = path.extname(file.originalname);
-      cb(null, `${cleanName}_${pdfnumber}__${id}${ext}`);
+      cb(null, `${id}_${ext}`);
     } catch (error) {
       cb(error);
     }
@@ -98,7 +91,7 @@ const extractText = async (filePath) => {
 
 const cvpdfRouter = Router();
 
-cvpdfRouter.post("/:id", (req, res) => {
+cvpdfRouter.post("/", (req, res) => {
   upload(req, res, async (err) => {
     if (err) return errorResponse(res, 400, err.message || "Upload error");
 
@@ -107,12 +100,6 @@ cvpdfRouter.post("/:id", (req, res) => {
     const tempFilePath = req.file.path;
 
     try {
-      const applicant = await jobapplicantsmodel.findById(req.params.id);
-      if (!applicant) {
-        fs.unlinkSync(tempFilePath);
-        return errorResponse(res, 404, "Applicant not found");
-      }
-
       const folderName = "cadilaJobApplicantsResume";
       const folderQuery = await drive.files.list({
         q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
@@ -164,9 +151,7 @@ cvpdfRouter.post("/:id", (req, res) => {
         });
       } catch (permErr) {}
 
-      applicant.resume = uploaded.data.webViewLink;
-      await applicant.save();
-
+   
       // Extract resume text
       const extractedText = await extractText(tempFilePath);
 

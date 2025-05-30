@@ -4,11 +4,14 @@ import {
   successResponse,
 } from "../../helpers/serverResponse.js";
 import resumeextractmodel from "../../models/resumeextractmodel.js";
+import cvpdfRouter from "./uploadcvRouter.js";
 
 const adminresumeextractRouter = Router();
 
 export default adminresumeextractRouter;
 adminresumeextractRouter.post("/", getallresumeextractHandler);
+adminresumeextractRouter.use("/upload", cvpdfRouter);
+
 
 async function getallresumeextractHandler(req, res) {
   try {
