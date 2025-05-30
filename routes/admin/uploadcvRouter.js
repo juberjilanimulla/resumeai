@@ -98,61 +98,61 @@ cvpdfRouter.post("/", (req, res) => {
     if (!req.file) return errorResponse(res, 400, "No file was uploaded");
 
     const tempFilePath = req.file.path;
+    const ext = path.extname(tempFilePath).toLowerCase();
+    // try {
+      // const folderName = "cadilaJobApplicantsResume";
+      // const folderQuery = await drive.files.list({
+      //   q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      //   fields: "files(id)",
+      // });
 
-    try {
-      const folderName = "cadilaJobApplicantsResume";
-      const folderQuery = await drive.files.list({
-        q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-        fields: "files(id)",
-      });
+      // let folderId = folderQuery.data.files[0]?.id;
+      // if (!folderId) {
+      //   const folder = await drive.files.create({
+      //     resource: {
+      //       name: folderName,
+      //       mimeType: "application/vnd.google-apps.folder",
+      //     },
+      //     fields: "id",
+      //   });
+      //   folderId = folder.data.id;
+      // }
 
-      let folderId = folderQuery.data.files[0]?.id;
-      if (!folderId) {
-        const folder = await drive.files.create({
-          resource: {
-            name: folderName,
-            mimeType: "application/vnd.google-apps.folder",
-          },
-          fields: "id",
-        });
-        folderId = folder.data.id;
-      }
+      // const ext = path.extname(tempFilePath).toLowerCase();
+      // const mimeTypeMap = {
+      //   ".pdf": "application/pdf",
+      //   ".doc": "application/msword",
+      //   ".docx":
+      //     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      // };
 
-      const ext = path.extname(tempFilePath).toLowerCase();
-      const mimeTypeMap = {
-        ".pdf": "application/pdf",
-        ".doc": "application/msword",
-        ".docx":
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      };
+      // const media = {
+      //   mimeType: mimeTypeMap[ext] || "application/octet-stream",
+      //   body: fs.createReadStream(tempFilePath),
+      // };
 
-      const media = {
-        mimeType: mimeTypeMap[ext] || "application/octet-stream",
-        body: fs.createReadStream(tempFilePath),
-      };
+      // const uploaded = await drive.files.create({
+      //   resource: {
+      //     name: req.file.filename,
+      //     parents: [folderId],
+      //   },
+      //   media,
+      //   fields: "id, webViewLink",
+      // });
 
-      const uploaded = await drive.files.create({
-        resource: {
-          name: req.file.filename,
-          parents: [folderId],
-        },
-        media,
-        fields: "id, webViewLink",
-      });
+      // // Make public
+      // try {
+      //   await drive.permissions.create({
+      //     fileId: uploaded.data.id,
+      //     requestBody: {
+      //       role: "reader",
+      //       type: "anyone",
+      //     },
+      //   });
+      // } catch (permErr) {}
 
-      // Make public
-      try {
-        await drive.permissions.create({
-          fileId: uploaded.data.id,
-          requestBody: {
-            role: "reader",
-            type: "anyone",
-          },
-        });
-      } catch (permErr) {}
-
-   
       // Extract resume text
+      try{
       const extractedText = await extractText(tempFilePath);
 
       const prompt = `
@@ -212,17 +212,68 @@ Text:
         });
         parsedData.skills = allSkills;
       }
-      const resumeextract = await resumeextractmodel.create({
-        ...parsedData,
-        originalFileName: uploaded.data.webViewLink,
+      // Save to MongoDB to get _id
+      const resumeDoc = new resumeextractmodel(parsedData);
+      await resumeDoc.save();
+
+      // Rename local file with _id
+      const renamedFileName = `${resumeDoc._id}${ext}`;
+      const renamedFilePath = path.join(path.dirname(tempFilePath), renamedFileName);
+      fs.renameSync(tempFilePath, renamedFilePath);
+
+      // Ensure folder exists in Drive
+      const folderName = "cadilaJobApplicantsResume";
+      const folderQuery = await drive.files.list({
+        q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        fields: "files(id)",
       });
 
-      fs.unlinkSync(tempFilePath);
-      successResponse(
-        res,
-        "Resume uploaded and parsed successfully",
-        resumeextract
-      );
+      let folderId = folderQuery.data.files[0]?.id;
+      if (!folderId) {
+        const folder = await drive.files.create({
+          resource: {
+            name: folderName,
+            mimeType: "application/vnd.google-apps.folder",
+          },
+          fields: "id",
+        });
+        folderId = folder.data.id;
+      }
+
+      const mimeTypeMap = {
+        ".pdf": "application/pdf",
+        ".doc": "application/msword",
+        ".docx":
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      };
+
+      const media = {
+        mimeType: mimeTypeMap[ext] || "application/octet-stream",
+        body: fs.createReadStream(renamedFilePath),
+      };
+
+      const uploaded = await drive.files.create({
+        resource: {
+          name: renamedFileName,
+          parents: [folderId],
+        },
+        media,
+        fields: "id, webViewLink",
+      });
+
+      await drive.permissions.create({
+        fileId: uploaded.data.id,
+        requestBody: {
+          role: "reader",
+          type: "anyone",
+        },
+      });
+
+      resumeDoc.originalFileName = uploaded.data.webViewLink;
+      await resumeDoc.save();
+
+      fs.unlinkSync(renamedFilePath);
+      successResponse(res, "Resume uploaded and parsed successfully", resumeDoc);
     } catch (error) {
       console.error("Resume processing error:", error.message);
       if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);

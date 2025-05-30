@@ -145,3 +145,6 @@ pdfs
 #.json
 credentials.json
 token.json
+
+#temp 
+/temp

@@ -5,13 +5,26 @@ import {
 } from "../../helpers/serverResponse.js";
 import resumeextractmodel from "../../models/resumeextractmodel.js";
 import cvpdfRouter from "./uploadcvRouter.js";
+import { google } from "googleapis";
+import fs from "fs";
 
+const credentials = JSON.parse(fs.readFileSync("credentials.json"));
+const { client_secret, client_id, redirect_uris } = credentials.installed;
+
+const oAuth2Client = new google.auth.OAuth2(
+  client_id,
+  client_secret,
+  redirect_uris[0]
+);
+oAuth2Client.setCredentials(JSON.parse(fs.readFileSync("token.json")));
+const drive = google.drive({ version: "v3", auth: oAuth2Client });
 const adminresumeextractRouter = Router();
 
 export default adminresumeextractRouter;
+
 adminresumeextractRouter.post("/", getallresumeextractHandler);
 adminresumeextractRouter.use("/upload", cvpdfRouter);
-
+adminresumeextractRouter.delete("/delete", deleteresumeextractHandler);
 
 async function getallresumeextractHandler(req, res) {
   try {
@@ -66,6 +79,41 @@ async function getallresumeextractHandler(req, res) {
       .limit(limit);
 
     successResponse(res, "Success", { resumedata, totalPages });
+  } catch (error) {
+    console.log("error", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}
+
+async function deleteresumeextractHandler(req, res) {
+  try {
+    const { _id } = req.body;
+
+    if (!_id) return errorResponse(res, 400, "Missing resume _id");
+
+    // Step 1: Find file in Google Drive with name = _id.pdf
+    const query = `name='${_id}.pdf' or name='${_id}.docx' or name='${_id}.doc'`;
+    const driveSearch = await drive.files.list({
+      q: `${query} and trashed=false`,
+      fields: "files(id, name)",
+    });
+
+    if (!driveSearch.data.files.length) {
+      return errorResponse(res, 404, "File not found on Google Drive");
+    }
+
+    const file = driveSearch.data.files[0];
+
+    // Step 2: Delete the file from Google Drive
+    await drive.files.delete({ fileId: file.id });
+
+    // Step 3: Delete from MongoDB
+    const deleted = await resumeextractmodel.findByIdAndDelete(_id);
+    if (!deleted) {
+      return errorResponse(res, 404, "Resume record not found in database");
+    }
+
+    successResponse(res, "Resume deleted from Google Drive and database");
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
