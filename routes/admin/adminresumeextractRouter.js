@@ -85,37 +85,36 @@ async function getallresumeextractHandler(req, res) {
   }
 }
 
-async function deleteresumeextractHandler(req, res) {
-  try {
-    const { _id } = req.body;
+async function deleteresumeextractHandler(req, res){
+ const { _id } = req.body;
 
-    if (!_id) return errorResponse(res, 400, "Missing resume _id");
+if (!_id) return errorResponse(res, 400, "Missing resume _id");
 
-    // Step 1: Find file in Google Drive with name = _id.pdf
-    const query = `name='${_id}.pdf' or name='${_id}.docx' or name='${_id}.doc'`;
-    const driveSearch = await drive.files.list({
-      q: `${query} and trashed=false`,
-      fields: "files(id, name)",
-    });
+try {
+  // Step 1: Try to find the file on Google Drive
+  const query = `name='${_id}.pdf' or name='${_id}.docx' or name='${_id}.doc'`;
+  const driveSearch = await drive.files.list({
+    q: `${query} and trashed=false`,
+    fields: "files(id, name)",
+  });
 
-    if (!driveSearch.data.files.length) {
-      return errorResponse(res, 404, "File not found on Google Drive");
-    }
-
+  // Step 2: If found, delete the file from Google Drive
+  if (driveSearch.data.files.length > 0) {
     const file = driveSearch.data.files[0];
-
-    // Step 2: Delete the file from Google Drive
     await drive.files.delete({ fileId: file.id });
+  }
 
-    // Step 3: Delete from MongoDB
-    const deleted = await resumeextractmodel.findByIdAndDelete(_id);
-    if (!deleted) {
-      return errorResponse(res, 404, "Resume record not found in database");
-    }
+  // Step 3: Always attempt to delete from MongoDB
+  const deleted = await resumeextractmodel.findByIdAndDelete(_id);
 
-    successResponse(res, "Resume deleted from Google Drive and database");
-  } catch (error) {
+  if (!deleted) {
+    return errorResponse(res, 404, "Resume record not found in database");
+  }
+ successResponse(res, "Resume deleted from database and (if found) from Google Drive");
+}
+   catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
   }
 }
+

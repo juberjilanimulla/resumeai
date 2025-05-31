@@ -1,4 +1,5 @@
 // authScript.js
+// authScript.js
 import fs from "fs";
 import readline from "readline";
 import { google } from "googleapis";
@@ -42,6 +43,7 @@ rl.question("Paste the code here ", async (code) => {
     rl.close();
   }
 });
+
 
 // authScript.js
 // import fs from "fs";
